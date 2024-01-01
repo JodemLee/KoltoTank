@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+  <JobDef>
+    <defName>EnterKoltoTank</defName>
+    <driverClass>KoltoTank.JobDriver_EnterKoltoTank</driverClass>
+    <reportString>entering biosculpter pod.</reportString>
+    <allowOpportunisticPrefix>true</allowOpportunisticPrefix>
+  </JobDef>
+
+  <JobDef>
+    <defName>CarryToKoltoTank</defName>
+    <driverClass>KoltoTank.JobDriver_CarryToKoltoTank</driverClass>
+    <reportString>carrying TargetA to biosculpter pod.</reportString>
+    <casualInterruptible>false</casualInterruptible>
+  </JobDef>
+  
+  
+  
+  
+</Defs>
