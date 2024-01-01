@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<ModMetaData>
+	<name>Kolto Tank</name>
+	<author>Lee</author>
+	<packageId>lee.koltotank</packageId>
+	<description>Adds the kolto/bacta tank from KoTOR 1/2.Heals physical injuries over time.</description>
+	<supportedVersions>
+		<li>1.4</li>
+	</supportedVersions>
+</ModMetaData>
