@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+
+	<HediffDef>
+		<defName>KoltoTank_Coma</defName>
+		<label>Artifically Induced coma</label>
+		<description>Using Kolto to artifically put the pawn into a coma for healing.</description>
+		<isBad>false</isBad>
+		<priceImpact>false</priceImpact>
+		<initialSeverity>1</initialSeverity>
+		<maxSeverity>1</maxSeverity>
+		<stages>
+			<li>
+				<minSeverity>0.8</minSeverity>
+				<painFactor>0</painFactor>
+				<capMods>
+					<li>
+						<capacity>Consciousness</capacity>
+						<setMax>0.01</setMax>
+					</li>
+				</capMods>
+			</li>
+		</stages>
+	</HediffDef>
+	
+	<HediffDef>
+		<defName>KoltoTank_Recovering</defName>
+		<label>Recovering from Coma</label>
+		<description>Getting out of the Kolto Tank has made them woozy, give them some time to regain their footing.</description>
+		<isBad>false</isBad>
+		<hediffClass>HediffWithComps</hediffClass>
+		<priceImpact>false</priceImpact>
+		<initialSeverity>1</initialSeverity>
+		<maxSeverity>1</maxSeverity>
+		<stages>
+			<li>
+				<minSeverity>0.8</minSeverity>
+				<painFactor>0</painFactor>
+				<capMods>
+					<li>
+						<capacity>Consciousness</capacity>
+						<setMax>0.9</setMax>
+					</li>
+				</capMods>
+			</li>
+		</stages>
+		 <comps>
+      <li Class="HediffCompProperties_Disappears">
+        <disappearsAfterTicks>1000~2000</disappearsAfterTicks>
+        <showRemainingTime>true</showRemainingTime>
+      </li>
+    </comps>
+	</HediffDef>
+
+
+</Defs>
