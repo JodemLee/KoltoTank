@@ -1,17 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Reflection;
-using System.Linq;
-using System.Text;
+﻿using AlienRace;
+using HarmonyLib;
 using RimWorld;
+using RimWorld.Planet;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using UnityEngine;
 using Verse;
 using Verse.AI;
 using Verse.Sound;
-using UnityEngine;
-using HarmonyLib;
-using RimWorld.Planet;
-using static HarmonyLib.Code;
-using static UnityEngine.Random;
+
 
 namespace KoltoTank
 {
@@ -26,7 +25,7 @@ namespace KoltoTank
         private CompPowerTrader powerTraderComp;
         private CompRefuelable refuelableComp;
         public bool PowerOn => this.TryGetComp<CompPowerTrader>().PowerOn;
-        public Building_KoltoTank Props => (Building_KoltoTank)Props;
+        public Building_KoltoTank Props => Props;
 
 
         public Vector3 innerDrawOffset;
@@ -132,7 +131,7 @@ namespace KoltoTank
                     FloatMenuOption failer = new FloatMenuOption("CannotUseNoPath".Translate(), null, MenuOptionPriority.Default, null, null, 0f, null, null);
                     yield return failer;
                 }
-                else
+                else if (HARFleshCheck.IsItFlesh(myPawn)) // Check if the pawn is flesh before allowing it to enter
                 {
                     JobDef jobDef = Kolto_DefOf.EnterKoltoTank;
                     string jobStr = "EnterKoltoTank".Translate();
@@ -240,16 +239,22 @@ namespace KoltoTank
                     }
                     return result;
                 }, null, 0, -1, false, RegionType.Set_Passable, false);
+
                 if (Building_KoltoTank != null && !Building_KoltoTank.forbiddable.Forbidden)
                 {
-                    if ((p.BodySize <= ((KoltoTankDef)(Building_KoltoTank.def)).bodySizeMax) && (p.BodySize >= ((KoltoTankDef)(Building_KoltoTank.def)).bodySizeMin))
+                    KoltoTankDef koltoTankDef = Building_KoltoTank.def as KoltoTankDef;
+
+                    // Check if the pawnkind is excluded
+                    if (koltoTankDef != null && (p.BodySize <= koltoTankDef.bodySizeMax) && (p.BodySize >= koltoTankDef.bodySizeMin))
                     {
                         return Building_KoltoTank;
                     }
                 }
             }
+
             return null;
         }
+
 
 
         private int ticksBetweenHealing = GenDate.TicksPerHour; // Adjust the interval as needed
@@ -522,7 +527,10 @@ namespace KoltoTank
         {
             s.CopyFrom(clipboard);
         }
-    }
+
+        
+    } 
+
     public class KoltoTankDef : ThingDef
     {
 
@@ -536,11 +544,10 @@ namespace KoltoTank
 
         public float bodySizeMax;
 
+        public List<PawnKindDef> excludedPawnKinds;
+
         public float color;
     }
-
-
-
 }
 
 

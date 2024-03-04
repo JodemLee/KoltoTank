@@ -17,7 +17,6 @@ namespace KoltoTank
     {
         private static readonly Type patchType = typeof(KoltoTankPatches);
 
-
         static KoltoTankPatches()
         {
             Harmony harmonyInstance = new Harmony("com.KoltoTank.rimworld.mod");
