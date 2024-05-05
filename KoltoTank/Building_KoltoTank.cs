@@ -14,18 +14,36 @@ using Verse.Sound;
 
 namespace KoltoTank
 {
-    public class Building_KoltoTank : Building_Casket, ISuspendableThingHolder
+    public class Building_KoltoTank : Building_Casket, ISuspendableThingHolder, IThingHolderWithDrawnPawn
     {
         private List<string> tmpWillHealHediffs = new List<string>();
-
         private List<string> tmpCanHealHediffs = new List<string>();
-
         private List<Hediff> tmpHediffs = new List<Hediff>();
         private CompPower powerComp;
         private CompPowerTrader powerTraderComp;
         private CompRefuelable refuelableComp;
         public bool PowerOn => this.TryGetComp<CompPowerTrader>().PowerOn;
         public Building_KoltoTank Props => Props;
+
+        Pawn pawn;
+
+        public float HeldPawnDrawPos_Y => pawn.DrawPos.y - 1f / 26f;
+
+        public float HeldPawnBodyAngle => pawn.Rotation.Opposite.AsAngle;
+
+        public PawnPosture HeldPawnPosture => PawnPosture.Standing;
+
+        public bool ModIsLoaded(string modName)
+        {
+            foreach (var modContentPack in LoadedModManager.RunningMods)
+            {
+                if (modContentPack.Name.ToLower() == modName.ToLower())
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
 
 
         public Vector3 innerDrawOffset;
@@ -104,7 +122,7 @@ namespace KoltoTank
                     SoundDefOf.CryptosleepCasket_Accept.PlayOneShot(new TargetInfo(base.Position, base.Map, false));
                 }
                 state = KoltoTankState.StartFilling;
-                Pawn pawn = thing as Pawn;
+                Pawn pawn = thing as Pawn;  
                 return true;
             }
             return false;
@@ -131,17 +149,36 @@ namespace KoltoTank
                     FloatMenuOption failer = new FloatMenuOption("CannotUseNoPath".Translate(), null, MenuOptionPriority.Default, null, null, 0f, null, null);
                     yield return failer;
                 }
-                else if (HARFleshCheck.IsItFlesh(myPawn)) // Check if the pawn is flesh before allowing it to enter
+                else
                 {
-                    JobDef jobDef = Kolto_DefOf.EnterKoltoTank;
-                    string jobStr = "EnterKoltoTank".Translate();
-                    Action jobAction = delegate ()
+                    if (ModIsLoaded("Humanoid Alien Races"))
                     {
-                        Job job = new Job(jobDef, this);
-                        myPawn.jobs.TryTakeOrderedJob(job, JobTag.Misc);
-                    };
-                    yield return FloatMenuUtility.DecoratePrioritizedTask(new FloatMenuOption(jobStr, jobAction, MenuOptionPriority.Default, null, null, 0f, null, null), myPawn, this, "ReservedBy");
+                        if (HARFleshCheck.IsItFlesh(myPawn)) // Check if the pawn is flesh before allowing it to enter
+                        {
+                            JobDef jobDef = Kolto_DefOf.EnterKoltoTank;
+                            string jobStr = "EnterKoltoTank".Translate();
+                            Action jobAction = delegate ()
+                            {
+                                Job job = new Job(jobDef, this);
+                                myPawn.jobs.TryTakeOrderedJob(job, JobTag.Misc);
+                            };
+                            yield return FloatMenuUtility.DecoratePrioritizedTask(new FloatMenuOption(jobStr, jobAction, MenuOptionPriority.Default, null, null, 0f, null, null), myPawn, this, "ReservedBy");
+                        }
+                    }
+                    else
+                    {
+                        JobDef jobDef = Kolto_DefOf.EnterKoltoTank;
+                        string jobStr = "EnterKoltoTank".Translate();
+                        Action jobAction = delegate ()
+                        {
+                            Job job = new Job(jobDef, this);
+                            myPawn.jobs.TryTakeOrderedJob(job, JobTag.Misc);
+                        };
+                        yield return FloatMenuUtility.DecoratePrioritizedTask(new FloatMenuOption(jobStr, jobAction, MenuOptionPriority.Default, null, null, 0f, null, null), myPawn, this, "ReservedBy");
+                    }
                 }
+
+                
             }
             yield break;
         }
@@ -335,7 +372,7 @@ namespace KoltoTank
             }
         }
 
-        public override void Draw()
+        protected override void DrawAt(Vector3 drawLoc, bool flip = false)
         {
             PawnRenderFlags drawFlags = PawnRenderFlags.Cache;
             drawFlags |= PawnRenderFlags.Clothes;
@@ -406,6 +443,8 @@ namespace KoltoTank
 
         public virtual void LiquidDraw(Color color, float fillPct)
         {
+            Log.Message($"Drawing liquid with fill percentage: {fillPct}");
+
             GenDraw.FillableBarRequest r = default(GenDraw.FillableBarRequest);
             r.center = DrawPos + waterDrawCenter;
             r.size = waterDrawSize;
@@ -416,30 +455,26 @@ namespace KoltoTank
             Rot4 rotation = Rotation;
             rotation.Rotate(RotationDirection.Clockwise);
             r.rotation = rotation;
+
+            Log.Message($"Drawing liquid at position: {r.center}, with size: {r.size}, and fill percentage: {r.fillPercent}");
+
             GenDraw.DrawFillableBar(r);
         }
 
-        public static MethodInfo pawnrender = AccessTools.Method(typeof(PawnRenderer), "RenderPawnInternal", new Type[6]
-    {
-        typeof(Vector3),
-        typeof(float),
-        typeof(bool),
-        typeof(Rot4),
-        typeof(RotDrawMode),
-        typeof(PawnRenderFlags)
-    }, (Type[])null);
         public virtual void DrawInnerThing(Pawn pawn, Vector3 rootLoc, PawnRenderFlags renderFlags)
         {
-            pawnrender.Invoke(pawn.Drawer.renderer, new object[6]
+            Pawn occupant = pawn;
+            Vector3 drawLoc = this.DrawPos;
+            Rot4 rotation2 = Rot4.South;
+            if (rotation2 == Rot4.East || rotation2 == Rot4.West)
             {
-            rootLoc,
-            0,
-            true,
-            Rot4.South,
-            RotDrawMode.Fresh,
-            renderFlags
-            });
+                drawLoc.z += 0.2f;
+            }
+            occupant.Drawer.renderer.RenderPawnAt(drawLoc, Rot4.South, neverAimWeapon: true);
         }
+
+        
+
         private bool WillHeal(Pawn pawn, Hediff hediff)
         {
             if (!hediff.def.everCurableByItem)
@@ -543,8 +578,6 @@ namespace KoltoTank
         public float bodySizeMin;
 
         public float bodySizeMax;
-
-        public List<PawnKindDef> excludedPawnKinds;
 
         public float color;
     }
